@@ -1,10 +1,6 @@
 # Loading excel data----
 
 library(gdata)
+library(dplyr)
 
-data <- read.xls("PGX_example_17JUN21.xlsx", header = T, sheet = 1)
-
-data <- data[!is.na(data$creatinin),] #removing NA creatinin NA rows
-
-
-
+stcs_select(datastring = "PGX_example_17JUN21.xlsx", eGFR.limit = 90)
