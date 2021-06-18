@@ -37,7 +37,8 @@ stcs_select <- function(datastring, eGFR.limit){
 
   # Calculating age @ creatinin and eGFR
 
-  data$creatininAge <- as.vector(difftime(time2 = data$birthday, time1 = data$creatinindate))/365
+  data$creatininAge <- as.vector(difftime(time2 = data$birthday,
+                                          time1 = data$creatinindate))/365
 
   data$sex <- as.factor(data$sex)
   levels(data$sex) <- c("female", "male")
@@ -89,6 +90,11 @@ stcs_select <- function(datastring, eGFR.limit){
   sum.tab1 <- group_by(data.final, organ, patid) %>% summarize(n = length(change))
 
   sum.tab2 <- group_by(sum.tab, organ) %>% summarize(npat = length(patid))
+
+  dev.new()
+  hist(data$egfr, breaks = 20,
+       xlab = expression(paste("eGFR (mL/min/",m^2,")")),
+       main = "eGFR distribution")
 
   return(list(tab1 = data.frame(sum.tab1), tab2 = data.frame(sum.tab2)))
 
