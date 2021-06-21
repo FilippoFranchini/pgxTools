@@ -21,7 +21,7 @@ gfr_calc <- function(scr, age, gender){
 }
 
 
-stcs_select <- function(datastring, eGFR.limit){
+stcs_select <- function(datastring, eGFR.limit = 90, l = 25){
 
   data <- read.xls(datastring, header = T, sheet = 1)
 
@@ -85,14 +85,16 @@ stcs_select <- function(datastring, eGFR.limit){
   data.final <- na.omit(data.final) # remove patients with baseline < 90
   data.final <- data.final[!data.final$change == 0,] # remove baselines
 
-  data.final <- data.final[data.final$change >= 25,] # take only data with change >= 25%
+  data.final <- data.final[data.final$change >= l,] # take only data with change >= 25%
 
   sum.tab1 <- group_by(data.final, organ, patid) %>% summarize(n = length(change))
+
+  sum.tab1 <- sum.tab1[sum.tab1$n > 1,] #taking patients with more than 1 measurement for confirmation period
 
   sum.tab2 <- group_by(sum.tab1, organ) %>% summarize(npat = length(patid))
 
   dev.new()
-  hist(data$egfr, breaks = 20,
+  hist(data.final$egfr, breaks = 20,
        xlab = expression(paste("eGFR (mL/min/",m^2,")")),
        main = "eGFR distribution")
 
