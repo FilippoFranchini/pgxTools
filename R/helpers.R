@@ -89,7 +89,7 @@ stcs_select <- function(datastring, eGFR.limit){
 
   sum.tab1 <- group_by(data.final, organ, patid) %>% summarize(n = length(change))
 
-  sum.tab2 <- group_by(sum.tab, organ) %>% summarize(npat = length(patid))
+  sum.tab2 <- group_by(sum.tab1, organ) %>% summarize(npat = length(patid))
 
   dev.new()
   hist(data$egfr, breaks = 20,
