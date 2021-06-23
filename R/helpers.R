@@ -93,10 +93,35 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25){
 
   cs.sum <- cs.sum[cs.sum$n > 1,] #taking patients with more than 1 measurement for confirmation period
 
+  id.cs <- cs.sum$patid
+
+  cases <- cases[cases$patid %in% id.cs,]
+
+  cs.info <- c()
+  Es <- c()
+  SEs <- c()
+  R2s <- c()
+
+  for(i in 1:length(id.cs)){
+
+    cs.sub <- subset(cases, patid == id.cs[i])
+
+    mod <- summary(lm(data = cs.sub, formula = change ~ assperiod))
+
+    Es[i] <- mod$coefficients[2,1]
+    SEs[i] <- mod$coefficients[2,2]
+    R2s[i] <- mod$r.squared
+
+    cs.info[i] <- paste(as.character(cs.sub$assperiod),collapse = " ")
+
+  }
+
+  cs.sum$info <- cs.info
+  cs.sum$E <- Es
+  cs.sum$SE <- SEs
+  cs.sum$R2 <- R2s
+
   cs.org.sum <- group_by(cs.sum, organ) %>% summarize(npat = length(patid))
-
-
-
 
   dev.new()
   hist(cases$egfr, breaks = 20,
