@@ -1,5 +1,3 @@
-load("SCQM_data_extract_2021_06_01.RData")
-
 # Methotrexate only
 
 data.med <- d.med_final[d.med_final$m.medication_generic_drug == "methotrexate" & is.na(d.med_final$discontinuation_reason),]
@@ -37,10 +35,44 @@ data.vis$eGFR <- eGFRs
 
 data.vis <- data.vis[,c(1,6:9)]
 
+data.vis <- na.omit(data.vis)
 
 
 library(dplyr)
 
 n <- data.frame(group_by(data.vis, patient_id) %>% summarise(c = length(gender)))
 
-n[n$c > 2,]$patient_id
+id.final <- n[n$c > 2,]$patient_id
+
+
+data.vis <- data.vis[data.vis$patient_id %in% id.final,]
+
+
+change <- list()
+
+for(i in 1:length(id.final)){
+
+  sub.data <- subset(data.vis, patient_id == id.final[i])
+
+  if(sub.data$eGFR[1] >= 90){
+
+    sub.data$change <- abs(sub.data$eGFR - sub.data$eGFR[1])/sub.data$eGFR[1]*100
+
+  } else {
+
+    sub.data$change <- NA
+
+  }
+
+  change[[i]] <- sub.data
+
+}
+
+
+data.final <- do.call(change,what = rbind)
+data.final <- na.omit(data.final)
+data.final <- data.final[!data.final$change == 0,]
+
+
+data.frame(group_by(data.final,patient_id) %>% summarise(m = mean(change), stdev = sd(change)))
+boxplot(change~patient_id,data=data.final)
