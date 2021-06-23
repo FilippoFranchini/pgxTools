@@ -21,7 +21,7 @@ gfr_calc <- function(scr, age, gender){
 }
 
 
-stcs_select <- function(datastring, eGFR.limit = 90, l = 25){
+stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25){
 
   data <- read.xls(datastring, header = T, sheet = 1)
 
@@ -85,20 +85,25 @@ stcs_select <- function(datastring, eGFR.limit = 90, l = 25){
   data.final <- na.omit(data.final) # remove patients with baseline < 90
   data.final <- data.final[!data.final$change == 0,] # remove baselines
 
-  data.final <- data.final[data.final$change >= l,] # take only data with change >= 25%
+  cases <- data.final[data.final$change >= l.cs,] # take only data with change >= l
 
-  sum.tab1 <- group_by(data.final, organ, patid) %>% summarize(n = length(change))
+  #controls <- data.final[data.final$change <= l.ct,]
 
-  sum.tab1 <- sum.tab1[sum.tab1$n > 1,] #taking patients with more than 1 measurement for confirmation period
+  cs.sum <- group_by(cases, organ, patid) %>% summarize(n = length(change))
 
-  sum.tab2 <- group_by(sum.tab1, organ) %>% summarize(npat = length(patid))
+  cs.sum <- cs.sum[cs.sum$n > 1,] #taking patients with more than 1 measurement for confirmation period
+
+  cs.org.sum <- group_by(cs.sum, organ) %>% summarize(npat = length(patid))
+
+
+
 
   dev.new()
-  hist(data.final$egfr, breaks = 20,
+  hist(cases$egfr, breaks = 20,
        xlab = expression(paste("eGFR (mL/min/",m^2,")")),
        main = "eGFR distribution")
 
-  return(list(tab1 = data.frame(sum.tab1), tab2 = data.frame(sum.tab2)))
+  return(list(tab1 = data.frame(cs.sum), tab2 = data.frame(cs.org.sum)))
 
 
 }
