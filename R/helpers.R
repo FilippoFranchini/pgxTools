@@ -21,7 +21,7 @@ gfr_calc <- function(scr, age, gender){
 }
 
 
-stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25){
+stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15){
 
   data <- read.xls(datastring, header = T, sheet = 1)
 
@@ -83,11 +83,11 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25){
 
   data.final <- do.call(change,what = rbind)
   data.final <- na.omit(data.final) # remove patients with baseline < 90
-  data.final <- data.final[!data.final$change == 0,] # remove baselines
+  #data.final <- data.final[!data.final$change == 0,] # remove baselines
 
+
+  #cases
   cases <- data.final[data.final$change >= l.cs,] # take only data with change >= l
-
-  #controls <- data.final[data.final$change <= l.ct,]
 
   cs.sum <- group_by(cases, organ, patid) %>% summarize(n = length(change))
 
@@ -123,12 +123,60 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25){
 
   cs.org.sum <- group_by(cs.sum, organ) %>% summarize(npat = length(patid))
 
-  dev.new()
-  hist(cases$egfr, breaks = 20,
-       xlab = expression(paste("eGFR (mL/min/",m^2,")")),
-       main = "eGFR distribution")
 
-  return(list(tab1 = data.frame(cs.sum), tab2 = data.frame(cs.org.sum)))
+
+  #controls
+  data.nocases <- data.final[!data.final$patid == id.cs,]
+
+  controls <- data.nocases[data.nocases$change <= l.ct,]
+
+  ct.sum <- group_by(controls, organ, patid) %>% summarize(n = length(change))
+
+  ct.sum <- ct.sum[ct.sum$n > 1,]
+
+
+
+  #incidence density sampling
+
+  ct.0 <- controls[controls$assperiod == 0,]
+
+  id.ct <- list()
+
+  for(i in 1:length(id.cs)){
+
+    cs.sub <- data.final[data.final$patid == id.cs[i],]
+
+    cs.date <- cs.sub$creatinindate[cs.sub$assperiod == 0]
+
+    dt <- as.vector(difftime(time2 = cs.date, time1 = ct.0$creatinindate))/365
+
+    id.ct[[i]] <- ct.0[abs(dt) <= 1,]$patid
+
+  }
+
+
+  id.ct <- unique(unlist(id.ct))
+
+  controls <- controls[controls$patid %in% id.ct,]
+
+  ct.org.sum <- group_by(controls, organ) %>% summarize(n = length(change))
+
+  #plots
+  dev.new()
+
+  par(mfrow=c(1,2))
+
+  hist(cases$egfr, breaks = 40,
+       xlab = expression(paste("eGFR (mL/min/",m^2,")")),
+       main = "CS eGFR distribution")
+
+  hist(controls$egfr, breaks = 40,
+       xlab = expression(paste("eGFR (mL/min/",m^2,")")),
+       main = "CT eGFR distribution")
+
+  return(list(tab1 = data.frame(cs.sum),
+              tab2 = data.frame(cs.org.sum),
+              tab3 = data.frame(ct.org.sum)))
 
 
 }
