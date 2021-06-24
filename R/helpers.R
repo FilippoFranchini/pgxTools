@@ -130,11 +130,6 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15){
 
   controls <- data.nocases[data.nocases$change <= l.ct,]
 
-  ct.sum <- group_by(controls, organ, patid) %>% summarize(n = length(change))
-
-  ct.sum <- ct.sum[ct.sum$n > 1,]
-
-
 
   #incidence density sampling
 
@@ -159,7 +154,11 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15){
 
   controls <- controls[controls$patid %in% id.ct,]
 
-  ct.org.sum <- group_by(controls, organ) %>% summarize(n = length(change))
+  ct.sum <- group_by(controls, organ, patid) %>% summarize(n = length(change))
+
+  ct.sum <- ct.sum[ct.sum$n > 1,]
+
+  ct.org.sum <- group_by(ct.sum, organ) %>% summarize(n = length(n))
 
   #plots
   dev.new()
@@ -176,7 +175,8 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15){
 
   return(list(tab1 = data.frame(cs.sum),
               tab2 = data.frame(cs.org.sum),
-              tab3 = data.frame(ct.org.sum)))
+              tab3 = data.frame(ct.sum),
+              tab4 = data.frame(ct.org.sum)))
 
 
 }
