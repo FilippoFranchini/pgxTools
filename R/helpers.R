@@ -163,11 +163,13 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15){
   #plots
   dev.new()
 
-  par(mfrow=c(1,2))
+  par(mfrow=c(2,2))
 
   hist(cases$egfr, breaks = 40,
        xlab = expression(paste("eGFR (mL/min/",m^2,")")),
        main = "CS eGFR distribution")
+
+  boxplot(cases$change ~ cases$patid)
 
   hist(controls$egfr, breaks = 40,
        xlab = expression(paste("eGFR (mL/min/",m^2,")")),
