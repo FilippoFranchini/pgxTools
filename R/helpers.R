@@ -175,6 +175,8 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15){
        xlab = expression(paste("eGFR (mL/min/",m^2,")")),
        main = "CT eGFR distribution")
 
+  boxplot(controls$change ~ controls$patid)
+
   return(list(tab1 = data.frame(cs.sum),
               tab2 = data.frame(cs.org.sum),
               tab3 = data.frame(ct.sum),
