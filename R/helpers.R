@@ -158,6 +158,10 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15){
 
   ct.sum <- ct.sum[ct.sum$n > 1,]
 
+  id.ct2 <- ct.sum$patid
+
+  controls <- controls[controls$patid %in% id.ct2,]
+
   ct.org.sum <- group_by(ct.sum, organ) %>% summarize(n = length(n))
 
   #plots
