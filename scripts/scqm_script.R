@@ -73,6 +73,10 @@ data.final <- do.call(change,what = rbind)
 data.final <- na.omit(data.final)
 data.final <- data.final[!data.final$change == 0,]
 
+cases <- data.final[data.final$change >= 25,]
 
-data.frame(group_by(data.final,patient_id) %>% summarise(m = mean(change), stdev = sd(change)))
+cs.sum <- group_by(cases, patient_id) %>% summarise(n = length(change))
+
+cs.sum <- cs.sum[cs.sum$n > 1,]
+
 boxplot(change~patient_id,data=data.final)
