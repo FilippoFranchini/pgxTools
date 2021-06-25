@@ -177,8 +177,8 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15){
 
   par(mfrow=c(2,1))
 
-  boxplot(cases$change ~ cases$patid)
-  boxplot(controls$change ~ controls$patid)
+  boxplot(cases$change ~ cases$patid, ylim=c(0,100))
+  boxplot(controls$change ~ controls$patid, ylim=c(0,100))
 
   return(list(tab1 = data.frame(cs.sum),
               tab2 = data.frame(cs.org.sum),
