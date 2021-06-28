@@ -97,43 +97,42 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15){
 
   cases <- cases[cases$patid %in% id.cs,]
 
-  cs.info <- c()
-  Es <- c()
-  SEs <- c()
-  R2s <- c()
+  #cs.info <- c()
+  #Es <- c()
+  #SEs <- c()
+  #R2s <- c()
 
-  for(i in 1:length(id.cs)){
+  #for(i in 1:length(id.cs)){
 
-    cs.sub <- subset(cases, patid == id.cs[i])
+  #  cs.sub <- subset(cases, patid == id.cs[i])
 
-    mod <- summary(lm(data = cs.sub, formula = change ~ assperiod))
+  #  mod <- summary(lm(data = cs.sub, formula = change ~ assperiod))
 
-    Es[i] <- mod$coefficients[2,1]
-    SEs[i] <- mod$coefficients[2,2]
-    R2s[i] <- mod$r.squared
+  #  Es[i] <- mod$coefficients[2,1]
+  #  SEs[i] <- mod$coefficients[2,2]
+  #  R2s[i] <- mod$r.squared
 
-    cs.info[i] <- paste(as.character(cs.sub$assperiod),collapse = " ")
+  #  cs.info[i] <- paste(as.character(cs.sub$assperiod),collapse = " ")
 
-  }
+  #}
 
-  cs.sum$info <- cs.info
-  cs.sum$E <- Es
-  cs.sum$SE <- SEs
-  cs.sum$R2 <- R2s
+  #cs.sum$info <- cs.info
+  #cs.sum$E <- Es
+  #cs.sum$SE <- SEs
+  #cs.sum$R2 <- R2s
 
   cs.org.sum <- group_by(cs.sum, organ) %>% summarize(npat = length(patid))
 
 
-
   #controls
-  data.nocases <- data.final[!data.final$patid == id.cs,]
+  data.nocases <- data.final[!data.final$patid %in% id.cs,]
 
   controls <- data.nocases[data.nocases$change <= l.ct,]
 
 
   #incidence density sampling
 
-  ct.0 <- controls[controls$assperiod == 0,]
+  ct.0 <- controls[controls$assperiod == 0,] #take all controls' baselines
 
   id.ct <- list()
 
@@ -183,6 +182,10 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15){
 
   boxplot(cases$change ~ cases$patid, ylim=c(0,100))
   boxplot(controls$change ~ controls$patid, ylim=c(0,100))
+
+
+  print(paste("Controls contain", paste0(sum(id.cs %in% id.ct2)), " cases."))
+
 
   return(list(tab1 = data.frame(cs.sum),
               tab2 = data.frame(cs.org.sum),
