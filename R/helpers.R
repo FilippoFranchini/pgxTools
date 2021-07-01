@@ -67,7 +67,7 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15){
 
     sub.data <- subset(data, patid == ids[i])
 
-    if(sub.data$egfr[sub.data$assperiod == 0] >= eGFR.limit){
+    if(sum(sub.data$egfr[sub.data$assperiod == 0] >= eGFR.limit) > 0){
 
       sub.data$change <- abs(sub.data$egfr - sub.data$egfr[sub.data$assperiod == 0])/sub.data$egfr[sub.data$assperiod == 0]*100
 
