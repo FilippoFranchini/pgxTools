@@ -190,7 +190,9 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15){
   return(list(tab1 = data.frame(cs.sum),
               tab2 = data.frame(cs.org.sum),
               tab3 = data.frame(ct.sum),
-              tab4 = data.frame(ct.org.sum)))
+              tab4 = data.frame(ct.org.sum),
+              cases.id = id.cs,
+              controls.id = id.ct2))
 
 
 }
