@@ -90,7 +90,6 @@ stcs_select <- function(datastring, GWAS.data, eGFR.limit = 90, l.cs = 25,
   cases <- data.final[data.final$change >= l.cs,] # take only data with change >= l
 
   cs.sum <- group_by(cases, organ, patid) %>% summarize(n = length(change))
-
   cs.sum <- cs.sum[cs.sum$n > 1,] #taking patients with more than 1 measurement for confirmation period
 
   id.cs <- cs.sum$patid
@@ -106,7 +105,6 @@ stcs_select <- function(datastring, GWAS.data, eGFR.limit = 90, l.cs = 25,
   controls <- data.nocases[data.nocases$change <= l.ct,]
 
   ct.sum <- group_by(controls, organ, patid) %>% summarize(n = length(change))
-
   ct.sum <- ct.sum[ct.sum$n > 1,]
 
   id.ct <- ct.sum$patid
@@ -118,7 +116,7 @@ stcs_select <- function(datastring, GWAS.data, eGFR.limit = 90, l.cs = 25,
 
   for(i in 1:length(id.cs)){
 
-    cs.sub <- data.final[data.final$patid == id.cs[i],]
+    cs.sub <- data.final[data.final$patid %in% id.cs[i],]
 
     cs.date1 <- cs.sub$creatinindate[cs.sub$assperiod == 0]
     cs.date2 <- cs.sub$creatinindate[cs.sub$change >= l.cs][1]
@@ -127,7 +125,7 @@ stcs_select <- function(datastring, GWAS.data, eGFR.limit = 90, l.cs = 25,
 
     for(j in 1:length(id.ct)){
 
-      ct.sub <- data.final[data.final$patid == id.ct[j],]
+      ct.sub <- data.final[data.final$patid %in% id.ct[j],]
 
       dt1 <- as.vector(difftime(time2 = cs.date1,
                                 time1 = ct.sub$creatinindate))/365
