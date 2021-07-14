@@ -21,7 +21,8 @@ gfr_calc <- function(scr, age, gender){
 }
 
 
-stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15, tol = 1){
+stcs_select <- function(datastring, GWAS.data, eGFR.limit = 90, l.cs = 25,
+                        l.ct = 15, tol = 1){
 
   data <- read.xls(datastring, header = T, sheet = 1)
 
@@ -96,31 +97,8 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15, tol =
 
   cases <- data.final[data.final$patid %in% id.cs,]
 
-  #cs.info <- c()
-  #Es <- c()
-  #SEs <- c()
-  #R2s <- c()
-
-  #for(i in 1:length(id.cs)){
-
-  #  cs.sub <- subset(cases, patid == id.cs[i])
-
-  #  mod <- summary(lm(data = cs.sub, formula = change ~ assperiod))
-
-  #  Es[i] <- mod$coefficients[2,1]
-  #  SEs[i] <- mod$coefficients[2,2]
-  #  R2s[i] <- mod$r.squared
-
-  #  cs.info[i] <- paste(as.character(cs.sub$assperiod),collapse = " ")
-
-  #}
-
-  #cs.sum$info <- cs.info
-  #cs.sum$E <- Es
-  #cs.sum$SE <- SEs
-  #cs.sum$R2 <- R2s
-
   cs.sum <- group_by(cases, organ) %>% summarize(n = length(unique(patid)))
+
 
   #controls
   data.nocases <- data.final[!data.final$patid %in% id.cs,]
@@ -184,6 +162,13 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15, tol =
 
   ct.sum <- group_by(controls, organ) %>% summarize(n = length(unique(patid)))
 
+
+  #GWAS comparison
+
+  GWAS.ids <- unlist(read.table(GWAS.data, header = F))
+  GWAS.n <- sum(c(id.cs, id.ct) %in% GWAS.ids)
+
+
   #plots
   dev.new()
 
@@ -208,7 +193,8 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15, tol =
 
   return(list(tab1 = data.frame(cs.sum),
               tab2 = data.frame(ct.sum),
-              ids = list(cases = id.cs, controls = id.ct)
+              ids = list(cases = id.cs, controls = id.ct),
+              GWAS.n = GWAS.n
               )
          )
 
