@@ -21,7 +21,7 @@ gfr_calc <- function(scr, age, gender){
 }
 
 
-stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15){
+stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15, tol = 1){
 
   data <- read.xls(datastring, header = T, sheet = 1)
 
@@ -81,7 +81,7 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15){
 
   }
 
-  data.final <- do.call(change,what = rbind)
+  data.final <- do.call(change, what = rbind)
   data.final <- na.omit(data.final) # remove patients with baseline < 90
   #data.final <- data.final[!data.final$change == 0,] # remove baselines
 
@@ -123,43 +123,67 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15){
 
   cs.org.sum <- group_by(cs.sum, organ) %>% summarize(npat = length(patid))
 
-
   #controls
   data.nocases <- data.final[!data.final$patid %in% id.cs,]
 
   controls <- data.nocases[data.nocases$change <= l.ct,]
 
+  ct.sum <- group_by(controls, organ, patid) %>% summarize(n = length(change))
+
+  ct.sum <- ct.sum[ct.sum$n > 1,]
+
+  id.ct <- ct.sum$patid
+
 
   #incidence density sampling
 
-  ct.0 <- controls[controls$assperiod == 0,] #take all controls' baselines
-
-  id.ct <- list()
+  id.ct.ids <- list()
 
   for(i in 1:length(id.cs)){
 
     cs.sub <- data.final[data.final$patid == id.cs[i],]
 
-    cs.date <- cs.sub$creatinindate[cs.sub$assperiod == 0]
+    cs.date1 <- cs.sub$creatinindate[cs.sub$assperiod == 0]
+    cs.date2 <- cs.sub$creatinindate[cs.sub$change >= l.cs][1]
 
-    dt <- as.vector(difftime(time2 = cs.date, time1 = ct.0$creatinindate))/365
+    ids.ct <- c()
 
-    id.ct[[i]] <- ct.0[abs(dt) <= 1,]$patid
+    for(j in 1:length(id.ct)){
+
+      ct.sub <- data.final[data.final$patid == id.ct[j],]
+
+      dt1 <- as.vector(difftime(time2 = cs.date1,
+                                time1 = ct.sub$creatinindate))/365
+
+      dt2 <- as.vector(difftime(time2 = cs.date2,
+                                time1 = ct.sub$creatinindate))/365
+
+      dt1.log <- sum(abs(dt1) <= tol)
+      dt2.log <- sum(abs(dt2) <= tol)
+
+      if(dt1.log >= 1 & dt2.log >= 1){
+
+        ids.ct[j] <- unique(ct.sub$patid)
+
+      } else {
+
+        ids.ct[j] <- NA
+
+      }
+
+    }
+
+
+    id.ct.ids[[i]] <- na.omit(ids.ct)
 
   }
 
 
-  id.ct <- unique(unlist(id.ct))
+  id.ct <- unique(unlist(id.ct.ids))
 
   controls <- controls[controls$patid %in% id.ct,]
 
   ct.sum <- group_by(controls, organ, patid) %>% summarize(n = length(change))
-
-  ct.sum <- ct.sum[ct.sum$n > 1,]
-
-  id.ct2 <- ct.sum$patid
-
-  controls <- controls[controls$patid %in% id.ct2,]
 
   ct.org.sum <- group_by(ct.sum, organ) %>% summarize(n = length(n))
 
@@ -184,7 +208,7 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15){
   boxplot(controls$change ~ controls$patid, ylim=c(0,100))
 
 
-  print(paste("Controls contain", paste0(sum(id.cs %in% id.ct2)), " cases."))
+  #print(paste("Controls contain", paste0(sum(id.cs %in% id.ct)), " cases."))
 
 
   return(list(tab1 = data.frame(cs.sum),
@@ -192,7 +216,7 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15){
               tab3 = data.frame(ct.sum),
               tab4 = data.frame(ct.org.sum),
               cases.id = id.cs,
-              controls.id = id.ct2))
+              controls.id = id.ct))
 
 
 }

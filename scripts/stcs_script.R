@@ -1,9 +1,9 @@
 library(gdata)
 library(dplyr)
 
-stcs_select(datastring = "PGX_example_17JUN21.xlsx", l.cs = 25, l.ct = 15)
+stcs_select(datastring = "PGX_example_17JUN21.xlsx", l.cs = 25, l.ct = 15, tol = 1)
 
-stcs_select(datastring = "PGX_example_17JUN21.xlsx", l.cs = 20, l.ct = 10)
+#stcs_select(datastring = "PGX_example_17JUN21.xlsx", l.cs = 20, l.ct = 10)
 
 ## Do not run ##
 
