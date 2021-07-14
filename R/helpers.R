@@ -83,7 +83,6 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15, tol =
 
   data.final <- do.call(change, what = rbind)
   data.final <- na.omit(data.final) # remove patients with baseline < 90
-  #data.final <- data.final[!data.final$change == 0,] # remove baselines
 
 
   #cases
@@ -95,7 +94,7 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15, tol =
 
   id.cs <- cs.sum$patid
 
-  cases <- cases[cases$patid %in% id.cs,]
+  cases <- data.final[data.final$patid %in% id.cs,]
 
   #cs.info <- c()
   #Es <- c()
@@ -121,7 +120,7 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15, tol =
   #cs.sum$SE <- SEs
   #cs.sum$R2 <- R2s
 
-  cs.org.sum <- group_by(cs.sum, organ) %>% summarize(npat = length(patid))
+  cs.sum <- group_by(cases, organ) %>% summarize(n = length(unique(patid)))
 
   #controls
   data.nocases <- data.final[!data.final$patid %in% id.cs,]
@@ -183,9 +182,7 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15, tol =
 
   controls <- controls[controls$patid %in% id.ct,]
 
-  ct.sum <- group_by(controls, organ, patid) %>% summarize(n = length(change))
-
-  ct.org.sum <- group_by(ct.sum, organ) %>% summarize(n = length(n))
+  ct.sum <- group_by(controls, organ) %>% summarize(n = length(unique(patid)))
 
   #plots
   dev.new()
@@ -204,19 +201,15 @@ stcs_select <- function(datastring, eGFR.limit = 90, l.cs = 25, l.ct = 15, tol =
 
   par(mfrow=c(2,1))
 
-  boxplot(cases$change ~ cases$patid, ylim=c(0,100))
-  boxplot(controls$change ~ controls$patid, ylim=c(0,100))
-
+  boxplot(cases$change ~ cases$patid, ylim = c(0, 100))
+  boxplot(controls$change ~ controls$patid, ylim = c(0, 100))
 
   #print(paste("Controls contain", paste0(sum(id.cs %in% id.ct)), " cases."))
 
-
   return(list(tab1 = data.frame(cs.sum),
-              tab2 = data.frame(cs.org.sum),
-              tab3 = data.frame(ct.sum),
-              tab4 = data.frame(ct.org.sum),
-              cases.id = id.cs,
-              controls.id = id.ct))
-
+              tab2 = data.frame(ct.sum),
+              ids = list(cases = id.cs, controls = id.ct)
+              )
+         )
 
 }
