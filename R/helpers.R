@@ -102,10 +102,12 @@ stcs_select <- function(datastring, GWAS.data, eGFR.limit = 90, l.cs = 25,
   #controls
   data.nocases <- data.final[!data.final$patid %in% id.cs,]
 
-  controls <- data.nocases[data.nocases$change <= l.ct,]
+  controls1st <- data.nocases[data.nocases$change <= l.ct,] #1st ct selection: change less than threshold
 
-  ct.sum <- group_by(controls, organ, patid) %>% summarize(n = length(change))
+  ct.sum <- group_by(controls1st, organ, patid) %>% summarize(n = length(change))
   ct.sum <- ct.sum[ct.sum$n > 1,]
+
+  controls2nd <- data.nocases[data.nocases$patid %in% ct.sum$patid,] #2nd ct selection: more than two measurement must be below threshold
 
   id.ct <- ct.sum$patid
 
@@ -133,12 +135,12 @@ stcs_select <- function(datastring, GWAS.data, eGFR.limit = 90, l.cs = 25,
       dt2 <- as.vector(difftime(time2 = cs.date2,
                                 time1 = ct.sub$creatinindate))/365
 
-      dt1.log <- sum(abs(dt1) <= tol)
-      dt2.log <- sum(abs(dt2) <= tol)
+      dt1.log <- sum(abs(dt1) <= tol) #+- tollerance at baseline
+      dt2.log <- sum(dt2 > 0) #ct dates must be > first date of cs
 
       if(dt1.log >= 1 & dt2.log >= 1){
 
-        ids.ct[j] <- unique(ct.sub$patid)
+        ids.ct[j] <- unique(ct.sub$patid) #because there are multiple lines for each patient
 
       } else {
 
