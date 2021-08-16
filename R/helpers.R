@@ -87,16 +87,16 @@ stcs_select <- function(datastring, GWAS.data, eGFR.limit = 90, l.cs = 25,
 
 
   #cases
-  cases <- data.final[data.final$change >= l.cs,] # take only data with change >= l
+  cases1st <- data.final[data.final$change >= l.cs,] # take only data greater than threshold
 
-  cs.sum <- group_by(cases, organ, patid) %>% summarize(n = length(change))
+  cs.sum <- group_by(cases1st, organ, patid) %>% summarize(n = length(change))
   cs.sum <- cs.sum[cs.sum$n > 1,] #taking patients with more than 1 measurement for confirmation period
 
   id.cs <- cs.sum$patid
 
-  cases <- data.final[data.final$patid %in% id.cs,]
+  cases2nd <- data.final[data.final$patid %in% id.cs,] # patients must have at least two measurements with change >= threshold
 
-  cs.sum <- group_by(cases, organ) %>% summarize(n = length(unique(patid)))
+  cs.sum <- group_by(cases2nd, organ) %>% summarize(n = length(unique(patid)))
 
 
   #controls
@@ -158,7 +158,7 @@ stcs_select <- function(datastring, GWAS.data, eGFR.limit = 90, l.cs = 25,
 
   id.ct <- unique(unlist(id.ct.ids))
 
-  controls <- controls[controls$patid %in% id.ct,]
+  controls <- controls2nd[controls2nd$patid %in% id.ct,]
 
   ct.sum <- group_by(controls, organ) %>% summarize(n = length(unique(patid)))
 
@@ -170,24 +170,24 @@ stcs_select <- function(datastring, GWAS.data, eGFR.limit = 90, l.cs = 25,
 
 
   #plots
-  dev.new()
+  #dev.new()
 
-  par(mfrow=c(1,2))
+  #par(mfrow=c(1,2))
 
-  hist(cases$egfr, breaks = 40,
-       xlab = expression(paste("eGFR (mL/min/",m^2,")")),
-       main = "CS eGFR distribution")
+  #hist(cases$egfr, breaks = 40,
+  #     xlab = expression(paste("eGFR (mL/min/",m^2,")")),
+  #     main = "CS eGFR distribution")
 
-  hist(controls$egfr, breaks = 40,
-       xlab = expression(paste("eGFR (mL/min/",m^2,")")),
-       main = "CT eGFR distribution")
+  #hist(controls$egfr, breaks = 40,
+  #     xlab = expression(paste("eGFR (mL/min/",m^2,")")),
+  #     main = "CT eGFR distribution")
 
-  dev.new()
+  #dev.new()
 
-  par(mfrow=c(2,1))
+  #par(mfrow=c(2,1))
 
-  boxplot(cases$change ~ cases$patid, ylim = c(0, 100))
-  boxplot(controls$change ~ controls$patid, ylim = c(0, 100))
+  #boxplot(cases$change ~ cases$patid, ylim = c(0, 100))
+  #boxplot(controls$change ~ controls$patid, ylim = c(0, 100))
 
   #print(paste("Controls contain", paste0(sum(id.cs %in% id.ct)), " cases."))
 
