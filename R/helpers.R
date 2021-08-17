@@ -59,7 +59,6 @@ stcs_select <- function(datastring, GWAS.data, eGFR.limit = 90, l.cs = 25,
   data$egfr <- egfrs
 
   # Calculating % change from baseline > 90 mL/min/1.73m2
-
   ids <- unique(data$patid)
 
   change <- list()
@@ -119,9 +118,10 @@ stcs_select <- function(datastring, GWAS.data, eGFR.limit = 90, l.cs = 25,
   for(i in 1:length(id.cs)){
 
     cs.sub <- data.final[data.final$patid %in% id.cs[i],]
+    cs.sub <- cs.sub[order(cs.sub$creatinindate),] #order from oldest to newest
 
-    cs.date1 <- cs.sub$creatinindate[cs.sub$assperiod == 0]
-    cs.date2 <- cs.sub$creatinindate[cs.sub$change >= l.cs][1]
+    cs.date1 <- cs.sub$creatinindate[cs.sub$assperiod == 0] #baseline
+    cs.date2 <- cs.sub$creatinindate[cs.sub$change >= l.cs][1] #first available measure
 
     ids.ct <- c()
 
@@ -130,10 +130,10 @@ stcs_select <- function(datastring, GWAS.data, eGFR.limit = 90, l.cs = 25,
       ct.sub <- data.final[data.final$patid %in% id.ct[j],]
 
       dt1 <- as.vector(difftime(time2 = cs.date1,
-                                time1 = ct.sub$creatinindate))/365
+                                time1 = ct.sub$creatinindate, units = "days"))/365
 
       dt2 <- as.vector(difftime(time2 = cs.date2,
-                                time1 = ct.sub$creatinindate))/365
+                                time1 = ct.sub$creatinindate, units = "days"))/365
 
       dt1.log <- sum(abs(dt1) <= tol) #+- tollerance at baseline
       dt2.log <- sum(dt2 > 0) #ct dates must be > first date of cs
