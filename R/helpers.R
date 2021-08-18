@@ -39,7 +39,8 @@ stcs_select <- function(datastring, GWAS.data, eGFR.limit = 90, l.cs = 25,
   # Calculating age @ creatinin and eGFR
 
   data$creatininAge <- as.vector(difftime(time2 = data$birthday,
-                                          time1 = data$creatinindate))/365
+                                          time1 = data$creatinindate,
+                                          units = "days"))/365
 
   data$sex <- as.factor(data$sex)
   levels(data$sex) <- c("female", "male")
@@ -136,7 +137,7 @@ stcs_select <- function(datastring, GWAS.data, eGFR.limit = 90, l.cs = 25,
                                 time1 = ct.sub$creatinindate, units = "days"))/365
 
       dt1.log <- sum(abs(dt1) <= tol) #+- tollerance at baseline
-      dt2.log <- sum(dt2 > 0) #ct dates must be > first date of cs
+      dt2.log <- sum(dt2 > 0) #last ct date must be > first date of cs
 
       if(dt1.log >= 1 & dt2.log >= 1){
 
