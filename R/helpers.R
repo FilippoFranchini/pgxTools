@@ -136,8 +136,8 @@ stcs_select <- function(datastring, GWAS.data, eGFR.limit = 90, l.cs = 25,
       dt2 <- as.vector(difftime(time2 = cs.date2,
                                 time1 = ct.sub$creatinindate, units = "days"))/365
 
-      dt1.log <- sum(dt1 > 0 & dt1 <= 3) #+- tollerance at baseline
-      dt2.log <- sum(dt2 > 0) #last ct date must be > first date of cs
+      dt1.log <- sum(dt1 > -1 & dt1 <= 3) #+- tollerance at baseline
+      dt2.log <- sum(dt2 >= 0) #last ct date must be > first date of cs
 
       if(dt1.log >= 1 & dt2.log >= 1){
 
