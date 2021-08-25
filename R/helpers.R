@@ -49,7 +49,7 @@ stcs_select <- function(datastring, GWAS.data, eGFR.limit = 90, l.cs = 25,
 
   egfrs <- c()
 
-  for(i in 1:nrows(data)){
+  for(i in 1:nrow(data)){
 
     egfrs[i] <- gfr_calc(scr = data$creatinin_c[i],
                          age = data$creatininAge[i],
