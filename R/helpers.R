@@ -1,12 +1,12 @@
 gfr_calc <- function(scr, age, gender){
 
-  if(gender == "male"){
+  if(gender == "Male"){
 
     kappa <- 0.9
     alpha <- -0.411
     beta <- 1
 
-  } else if(gender == "female"){
+  } else if(gender == "Female"){
 
     kappa <- 0.7
     alpha <- -0.329
