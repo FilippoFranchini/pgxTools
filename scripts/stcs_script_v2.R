@@ -57,7 +57,7 @@ for(i in 1:length(ids)){ #this nested loop removes ids with < 3 measurements, di
 
   } else if(sum(sub.data$egfr[sub.data$creatinindate == oldest.date] >= 90) > 0){ #if baseline >= 90, then calculate change in egfr for the other values
 
-    sub.data$change <- abs(sub.data$egfr - sub.data$egfr[sub.data$creatinindate == oldest.date])/sub.data$egfr[sub.data$creatinindate == oldest.date]*100
+    sub.data$change <- (sub.data$egfr - 90)/90*100 #drop from 90
 
   } else { #if baseline < 90, then NA
 
@@ -76,7 +76,7 @@ data.final <- na.omit(data.final)
 
 #cases1st <- data.final[data.final$change >= 25,] # take only data greater than threshold
 
-cs.sum <- group_by(data.final, patid) %>% summarize(n = length(change), pct = sum(change >= 25)/length(change)*100)
+cs.sum <- group_by(data.final, patid) %>% summarize(n = length(change), pct = sum(change <= -25)/length(change)*100)
 cs.sum <- cs.sum[cs.sum$pct >= 30,] #taking patients with at least 30% measures >= 25% drop from 90
 
 id.cs <- cs.sum$patid
@@ -91,7 +91,7 @@ plot(x = cases$creatinindate, y = cases$patid, type = "n")
 for(i in 1:length(id.cs)){
 
   sub.data <- subset(cases, patid == id.cs[i])
-  col <- ifelse(sub.data$change >= 25, "red", ifelse(sub.data$change >= 15, "orange", "green"))
+  col <- ifelse(sub.data$change <= -25, "red", ifelse(sub.data$change <= -15 & sub.data$change > -25, "orange", "green"))
 
   abline(h = sub.data$patid, col = "grey", lwd = 0.2)
   points(sub.data$creatinindate, sub.data$patid, col = col, pch = 19, cex = 0.5)
@@ -111,7 +111,7 @@ plot(x = data.nocases$creatinindate, y = data.nocases$patid, type = "n")
 for(i in 1:length(id.ct)){
 
   sub.data <- subset(data.nocases, patid == id.ct[i])
-  col <- ifelse(sub.data$change >= 25, "red", ifelse(sub.data$change >= 15, "orange", "green"))
+  col <- ifelse(sub.data$change <= -25, "red", ifelse(sub.data$change <= -15 & sub.data$change > -25, "orange", "green"))
 
   abline(h = sub.data$patid, col = "grey", lwd = 0.2)
   points(sub.data$creatinindate, sub.data$patid, col = col, pch = 19, cex = 0.5)
@@ -121,6 +121,7 @@ for(i in 1:length(id.ct)){
 
 #INCIDENCE DENSITY SAMPLING----
 
+set.seed(123456)
 
 id.ct.ids <- rep(NA, length(id.cs)) #vector filled with NA of length of cases
 
@@ -131,14 +132,14 @@ for(i in 1:length(id.cs)){ #iterations over cases
   tpx.d.cs <- unique(cs.sub$tpxdate) #tpx date of the case
 
   cs.date1 <- cs.sub$creatinindate[cs.sub$creatinindate == min(cs.sub$creatinindate)] #baseline date
-  cs.date2 <- cs.sub$creatinindate[cs.sub$change >= 25] #dates with drop >= 25%
+  cs.date2 <- cs.sub$creatinindate[cs.sub$change <= -25] #dates with drop >= 25%
   cs.date2 <- cs.date2[cs.date2 == min(cs.date2)] #take earliest date available with drop >= 25%
 
   followup.cs <- as.vector(difftime(time2 = tpx.d.cs, time1 = cs.date2, units = "days"))/365 #followup period tpx date - earliest date available with drop >= 25%
 
   id.ct.corr <- id.ct[!id.ct %in% id.ct.ids[!is.na(id.ct.ids)]] #removes ct that have been already selected from the ct pool
 
-  ids.ct <- matrix(nrow = length(id.ct.corr), ncol = 2) #empty matrix 2 columns and n rows = n cts available
+  ids.ct <- rep(NA, length(id.ct.corr)) #empty matrix 2 columns and n rows = n cts available
 
   for(j in 1:length(id.ct.corr)){ #loop over all available cts
 
@@ -146,28 +147,40 @@ for(i in 1:length(id.cs)){ #iterations over cases
 
     tpx.d.ct <- unique(ct.sub$tpxdate) #tpx date of the control
 
-    dt1 <- as.vector(difftime(time2 = cs.date1,
-                              time1 = ct.sub$creatinindate, units = "days"))/365 #time difference between cs baseline and all dates of the ct
+    tpx.diff <- as.vector(difftime(time2 = tpx.d.cs,
+                                   time1 = tpx.d.ct,
+                                   units = "days"))/365 #time difference between cs and ct tpx dates
 
-    dt2 <- as.vector(difftime(time2 = cs.date2,
-                              time1 = ct.sub$creatinindate, units = "days"))/365 #time difference between earliest cs data with >= 25% drop and all dates of the ct
+    followups.ct <- as.vector(difftime(time2 = tpx.d.ct,
+                                       time1 = ct.sub$creatinindate,
+                                       units = "days"))/365 #time difference between ct tpx date and all ct creatinine dates
 
-    first.date <- min(ct.sub$creatinindate[dt2 >= 0]) #earliest ct date bigger than earliest cs data with >= 25%
+    followup.diff <- abs(followup.cs - followups.ct) #time difference btw ct followup and cs followups
 
-    followup.ct <- as.vector(difftime(time2 = tpx.d.ct, time1 = first.date, units = "days"))/365 #followup period tpx date - earliest ct date bigger than earliest cs data with >= 25%
+    if(min(followup.diff)*365 >= 30){ #if min followup diff >= 30 days go to next control
 
-    followup.diff <- unique(followup.ct - followup.cs) #difference between cs and ct followups
+      next
 
-    dt1.log <- sum(abs(dt1) <= 1) #+- tollerance at baseline (>= 1 if abs(dt1) contains values <= 1 year)
-    dt2.log <- sum(dt2 >= 0) #last ct date must be > first date of cs (>= 1 if dt2 contains values >= 0 years)
-    followup.log <- abs(followup.diff) <= 1 #followup difference 1 year (TRUE if followup.diff contains values <= 1 years)
+    }
+
+    followup.ct.date <- ct.sub$creatinindate[followup.diff == min(followup.diff)] #take minimum time difference as ct followup upr limit
+
+
+    followup.check <- ct.sub$change[ct.sub$creatinindate <= followup.ct.date] >= -15 #check if all dates within ct followup have egfr >= -15
+
+    after.fup.date <- min(ct.sub$creatinindate[ct.sub$creatinindate > followup.ct.date])
+
+
+    dt1.log <- abs(tpx.diff) <= 1 #TRUE if tpx ct is +- 1 from tpx cs
+    green.followup <- sum(followup.check) == length(followup.check) #TRUE if followup ct is green
+    followup.next.check <- ct.sub$change[ct.sub$creatinindate == after.fup.date] >= -15
+
     sex.log <- unique(cs.sub$sex) == unique(ct.sub$sex) #TRUE if ct and cs of same sex
     organ.log <- unique(cs.sub$organ) == unique(ct.sub$organ) #TRUE if ct and cs same organ
 
-    if(dt1.log > 0 & dt2.log > 0 & followup.log & sex.log & organ.log){ #if same organ & sex, followup.diff <= 1, ct has measurement greater than irst date of cs and within +-1 y from cs baseline --> then  take cs id together with followup.diff
+    if(sum(c(dt1.log, green.followup, followup.next.check, sex.log, organ.log)) == 5){ #if same organ & sex, followup.diff <= 1, ct has measurement greater than irst date of cs and within +-1 y from cs baseline --> then  take cs id together with followup.diff
 
-      ids.ct[j,1] <- unique(ct.sub$patid) #because there are multiple lines for each patient
-      ids.ct[j,2] <- followup.diff
+      ids.ct[j] <- unique(ct.sub$patid) #because there are multiple lines for each patient
 
     } else { #if the ct does not satisfy the above criteria --> next ct
 
@@ -183,9 +196,11 @@ for(i in 1:length(id.cs)){ #iterations over cases
 
   }
 
-  followup.min <- ids.ct[abs(ids.ct[,2]) %in% min(abs(ids.ct[,2]), na.rm = T),][1] #if multiple cts are selected for the case --> take the ct with lowes followup.diff
+  if(sum(!is.na(ids.ct)) > 1){ #if more than one, random sample
 
-  id.ct.ids[i] <- followup.min #store ct id --> next case
+    id.ct.ids[i] <- sample(na.omit(ids.ct), size = 1)
+
+  }
 
 }
 
