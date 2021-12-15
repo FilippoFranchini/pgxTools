@@ -182,6 +182,9 @@ for(i in 1:length(id.cs)){ #iterations over cases
 
 na.omit(id.ct.ids)
 
+pat.sel.ids <- data.frame(cases = id.cs, controls = id.ct.ids)
+usethis::use_data(pat.sel.ids, overwrite = T)
+
 #CHECKING IDS WITH GWAS ALREADY----
 
 sum(id.cs %in% data.gwas[,1]) #number of cases with already gwas data
