@@ -54,7 +54,7 @@ cases <- data.final[data.final$patid %in% id.cs,]
 
 par(mfrow=c(1,2))
 
-plot(x = cases$crea.date.new, y = cases$patid, type = "n")
+plot(x = cases$crea.date.new, y = cases$patid, type = "n", ylab = "Patient ID", xlab = "Year")
 
 for(i in 1:length(id.cs)){
 
@@ -74,7 +74,7 @@ data.nocases <- data.final[!data.final$patid %in% id.cs,] #remove cases from dat
 
 id.ct <- unique(data.nocases$patid) #ids of controls (no incidence density sampling)
 
-plot(x = data.nocases$crea.date.new, y = data.nocases$patid, type = "n")
+plot(x = data.nocases$crea.date.new, y = data.nocases$patid, type = "n", ylab = "Patient ID", xlab = "Year")
 
 for(i in 1:length(id.ct)){
 
