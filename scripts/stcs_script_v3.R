@@ -16,8 +16,9 @@ for(i in 1:length(ids)){ #this nested loop removes ids with < 3 measurements, di
   sub.data <- as.data.frame(subset(data, patid == ids[i])) #subset by id
 
   oldest.date <- min(sub.data$crea.date.new) #take earliest date available
+  diff.check <- difftime(time2 = oldest.date , time1 = sub.data$crea.date.new, units = "days")
 
-  if(length(sub.data[,1]) < 3){ #remove ids with 1 and 2 measurements
+  if(length(sub.data[,1]) < 3 | sum(diff.check >= 30) == 0){ #remove ids with 1 and 2 measurements
 
     sub.data$change <- NA
 
@@ -51,6 +52,7 @@ cases <- data.final[data.final$patid %in% id.cs,]
 
 #cs.sum <- group_by(cases, organ) %>% summarize(n = length(unique(patid)))
 
+par(mfrow=c(1,2))
 
 plot(x = cases$crea.date.new, y = cases$patid, type = "n")
 
