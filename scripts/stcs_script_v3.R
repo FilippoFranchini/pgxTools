@@ -93,9 +93,9 @@ set.seed(123456)
 
 id.ct.ids <- rep(NA, length(id.cs)) #vector filled with NA of length of cases
 
-for(i in 1:length(id.cs)){ #iterations over cases
+potential.ct.ids <- list()
 
-  print(i)
+for(i in 1:length(id.cs)){ #iterations over cases
 
   cs.sub <- data.final[data.final$patid %in% id.cs[i],] #subset specific case
 
@@ -133,7 +133,7 @@ for(i in 1:length(id.cs)){ #iterations over cases
 
     followup.diff <- abs(followup.cs - followups.ct) #time difference btw ct followup and cs followups
 
-    if(min(followup.diff)*365 >= 30){ #if min followup diff >= 30 days go to next control
+    if(min(followup.diff)*365 >= 180){ #if min followup diff >= 30 days go to next control
 
       next
 
@@ -179,6 +179,8 @@ for(i in 1:length(id.cs)){ #iterations over cases
     id.ct.ids[i] <- sample(na.omit(ids.ct), size = 1)
 
   }
+
+  potential.ct.ids[[i]] <- ids.ct
 
 }
 
