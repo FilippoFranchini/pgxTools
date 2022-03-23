@@ -11,7 +11,7 @@ ids <- unique(data$patid)
 
 change <- list()
 
-for(i in 1:length(ids)){ #this nested loop removes ids with < 3 measurements, discards ids with baseline < 90, calculates % change in egfr from baseline if baseline >= 90
+for(i in 1:length(ids)){ #this loop removes ids with < 3 measurements, discards ids with baseline < 90, calculates % change in egfr from baseline if baseline >= 90
 
   sub.data <- as.data.frame(subset(data, patid == ids[i])) #subset by id
 
@@ -41,7 +41,42 @@ data.final <- data.final[!is.na(data.final$change),]
 
 #CASES----
 
-#cases1st <- data.final[data.final$change >= 25,] # take only data greater than threshold
+#ids <- unique(data.final$patid)
+
+#cs_selection <- rep(NA, length(ids))
+
+#for (i in 1:length(ids)){
+
+#  sub.data <- as.data.frame(subset(data.final, patid == ids[i]))
+
+#  cs.dates <- sub.data$crea.date.new[sub.data$change <= -25]
+
+#  if(length(cs.dates) == 0){
+
+#    next
+
+#  }
+
+#  min.cs.date <- min(cs.dates)
+
+#  follow.dates <- sub.data$crea.date.new[sub.data$crea.date.new >= min.cs.date]
+
+#  pct <- length(cs.dates)/length(follow.dates)*100
+
+#  if(pct >= 30){
+
+#    cs_selection[i] <- ids[i]
+
+#  } else {
+
+#    cs_selection[i] <- NA
+
+#  }
+
+#}
+
+#id.cs <- na.omit(cs_selection)
+
 
 cs.sum <- group_by(data.final, patid) %>% summarize(n = length(change), pct = sum(change <= -25)/length(change)*100)
 cs.sum <- cs.sum[cs.sum$pct >= 30,] #taking patients with at least 30% measures >= 25% drop from 90
@@ -49,6 +84,9 @@ cs.sum <- cs.sum[cs.sum$pct >= 30,] #taking patients with at least 30% measures 
 id.cs <- cs.sum$patid
 
 cases <- data.final[data.final$patid %in% id.cs,]
+
+#cases.stcs <- cases
+#usethis::use_data(cases.stcs, overwrite = T)
 
 #cs.sum <- group_by(cases, organ) %>% summarize(n = length(unique(patid)))
 
@@ -71,6 +109,9 @@ for(i in 1:length(id.cs)){
 #CONTROLS----
 
 data.nocases <- data.final[!data.final$patid %in% id.cs,] #remove cases from data.final
+
+#nocases.stcs <- data.nocases
+#usethis::use_data(nocases.stcs, overwrite = T)
 
 id.ct <- unique(data.nocases$patid) #ids of controls (no incidence density sampling)
 
